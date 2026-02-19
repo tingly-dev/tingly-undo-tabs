@@ -1,0 +1,44 @@
+{
+  "name": "tingly-undo-tabs",
+  "version": "1.0.0",
+  "description": "Chrome extension to record and reopen closed tabs",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "generate-icons": "cd public/icons && magick icon.svg -resize 16x16 icon16.png && magick icon.svg -resize 48x48 icon48.png && magick icon.svg -resize 128x128 icon128.png"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tingly-dev/tingly-undo-tabs.git"
+  },
+  "keywords": [
+    "chrome-extension",
+    "tabs",
+    "history"
+  ],
+  "author": "",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/tingly-dev/tingly-undo-tabs/issues"
+  },
+  "homepage": "https://github.com/tingly-dev/tingly-undo-tabs#readme",
+  "dependencies": {
+    "@mui/icons-material": "^7.3.8",
+    "@vitejs/plugin-react": "^5.1.4",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "vite": "^7.3.1"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.3.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^7.3.8",
+    "@types/chrome": "^0.0.307",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  }
+}
