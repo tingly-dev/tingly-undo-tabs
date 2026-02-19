@@ -11,6 +11,7 @@ import {
   Snackbar,
   Chip,
   Stack,
+  Link,
 } from '@mui/material'
 import { Config, DEFAULT_CONFIG } from '../types'
 import { getConfig, saveConfig, clearClosedTabs } from '../utils/storage'
@@ -144,6 +145,27 @@ export function App() {
         <Button variant="outlined" color="error" onClick={handleClearHistory}>
           Clear All History
         </Button>
+      </Paper>
+
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          About
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          <strong>License:</strong> MPL-2.0
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          <strong>Repository:</strong>{' '}
+          <Link href="https://github.com/tingly-dev/tingly-undo-tabs" target="_blank" rel="noopener">
+            github.com/tingly-dev/tingly-undo-tabs
+          </Link>
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          <strong>Report Issues:</strong>{' '}
+          <Link href="https://github.com/tingly-dev/tingly-undo-tabs/issues" target="_blank" rel="noopener">
+            GitHub Issues
+          </Link>
+        </Typography>
       </Paper>
 
       <Box sx={{ display: 'flex', gap: 2 }}>
