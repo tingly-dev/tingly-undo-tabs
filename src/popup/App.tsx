@@ -21,8 +21,9 @@ import { ClosedTab } from '../types'
 import { searchTabs } from '../utils/helpers'
 import { clearClosedTabs, getClosedTabs, removeClosedTab } from '../utils/storage'
 
-const ITEMS_PER_PAGE = 8
-const TAB_LIST_HEIGHT = 8 * 60 // 8 items
+const ITEMS_PER_PAGE = 7
+const TAB_ITEM_HEIGHT = 60
+const TAB_LIST_HEIGHT = ITEMS_PER_PAGE * TAB_ITEM_HEIGHT // 7 items * 60px = 420px
 
 export function App() {
   const [tabs, setTabs] = useState<ClosedTab[]>([])
