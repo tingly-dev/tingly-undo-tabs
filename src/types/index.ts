@@ -16,5 +16,5 @@ export interface Config {
 export const DEFAULT_CONFIG: Config = {
   maxItems: 100,
   showNotifications: false,
-  excludePatterns: ['chrome://', 'chrome-extension://', 'about:', 'edge://', 'brave://'],
+  excludePatterns: [],
 }

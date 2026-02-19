@@ -11,6 +11,7 @@ import {
   DialogActions,
   Button,
   CircularProgress,
+  Pagination,
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep'
@@ -20,11 +21,14 @@ import { searchTabs } from '../utils/helpers'
 import { SearchBar } from '../components/SearchBar'
 import { TabListItem } from '../components/TabListItem'
 
+const ITEMS_PER_PAGE = 10
+
 export function App() {
   const [tabs, setTabs] = useState<ClosedTab[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [clearDialogOpen, setClearDialogOpen] = useState(false)
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     loadTabs()
@@ -57,6 +61,18 @@ export function App() {
   const filteredTabs = useMemo(() => {
     return searchTabs(tabs, search)
   }, [tabs, search])
+
+  const totalPages = Math.ceil(filteredTabs.length / ITEMS_PER_PAGE)
+
+  const paginatedTabs = useMemo(() => {
+    const start = (page - 1) * ITEMS_PER_PAGE
+    return filteredTabs.slice(start, start + ITEMS_PER_PAGE)
+  }, [filteredTabs, page])
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setPage(1)
+  }, [search])
 
   function openOptions() {
     chrome.runtime.openOptionsPage()
@@ -99,7 +115,7 @@ export function App() {
           </Box>
         ) : (
           <List dense disablePadding>
-            {filteredTabs.map((tab) => (
+            {paginatedTabs.map((tab) => (
               <TabListItem
                 key={tab.id}
                 tab={tab}
@@ -110,6 +126,20 @@ export function App() {
           </List>
         )}
       </Box>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 1, borderTop: 1, borderColor: 'divider' }}>
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={(_, newPage) => setPage(newPage)}
+            size="small"
+            siblingCount={1}
+            boundaryCount={1}
+          />
+        </Box>
+      )}
 
       {/* Footer */}
       {tabs.length > 0 && (

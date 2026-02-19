@@ -107,6 +107,9 @@ export function App() {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           URLs starting with these patterns will not be recorded
         </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic' }}>
+          Common patterns: chrome://, chrome-extension://, about:, edge://, brave://
+        </Typography>
 
         <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
           {config.excludePatterns.map((pattern) => (
