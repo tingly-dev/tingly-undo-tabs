@@ -1,20 +1,20 @@
-import { useState, useEffect } from 'react'
 import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Switch,
-  FormControlLabel,
-  Paper,
-  Alert,
-  Snackbar,
-  Chip,
-  Stack,
-  Link,
+    Alert,
+    Box,
+    Button,
+    Chip,
+    FormControlLabel,
+    Link,
+    Paper,
+    Snackbar,
+    Stack,
+    Switch,
+    TextField,
+    Typography,
 } from '@mui/material'
+import { useEffect, useState } from 'react'
 import { Config, DEFAULT_CONFIG } from '../types'
-import { getConfig, saveConfig, clearClosedTabs } from '../utils/storage'
+import { clearClosedTabs, getConfig, saveConfig } from '../utils/storage'
 
 export function App() {
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG)
@@ -71,9 +71,14 @@ export function App() {
 
   return (
     <Box sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Tab History Manager Settings
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+        <Typography variant="h4">
+          Tab History Manager
+        </Typography>
+        <Button variant="contained" onClick={handleSave}>
+          Save Settings
+        </Button>
+      </Box>
 
       <Paper sx={{ p: 2, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
@@ -167,12 +172,6 @@ export function App() {
           </Link>
         </Typography>
       </Paper>
-
-      <Box sx={{ display: 'flex', gap: 2 }}>
-        <Button variant="contained" onClick={handleSave}>
-          Save Settings
-        </Button>
-      </Box>
 
       <Snackbar
         open={saved}
