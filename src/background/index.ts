@@ -2,12 +2,40 @@ import { addClosedTab, getConfig } from '../utils/storage'
 import { shouldExcludeUrl, generateTabId } from '../utils/helpers'
 import { ClosedTab } from '../types'
 
-// Track tabs before they're removed (to capture info)
+// Track tabs info (keyed by tabId)
 const tabInfoMap = new Map<number, { url: string; title: string; favIconUrl?: string }>()
 
-// Capture tab info when it might be closed
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url) {
+// Initialize existing tabs on service worker start
+async function initializeExistingTabs() {
+  const tabs = await chrome.tabs.query({})
+  for (const tab of tabs) {
+    if (tab.id !== undefined && tab.url) {
+      tabInfoMap.set(tab.id, {
+        url: tab.url,
+        title: tab.title || tab.url,
+        favIconUrl: tab.favIconUrl,
+      })
+    }
+  }
+}
+
+// Run initialization
+initializeExistingTabs()
+
+// Capture tab info on created
+chrome.tabs.onCreated.addListener((tab) => {
+  if (tab.id !== undefined && tab.url) {
+    tabInfoMap.set(tab.id, {
+      url: tab.url,
+      title: tab.title || tab.url,
+      favIconUrl: tab.favIconUrl,
+    })
+  }
+})
+
+// Capture tab info on updated (for pages that load after creation)
+chrome.tabs.onUpdated.addListener((tabId, _changeInfo, tab) => {
+  if (tab.url) {
     tabInfoMap.set(tabId, {
       url: tab.url,
       title: tab.title || tab.url,
@@ -18,7 +46,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 // Record closed tab
 chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
-  // Skip incognito windows
+  // Skip when window is closing
   if (removeInfo.isWindowClosing) return
 
   const tabInfo = tabInfoMap.get(tabId)
@@ -47,7 +75,6 @@ chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
 
 // Clean up tabInfoMap periodically
 setInterval(() => {
-  // Keep only recent entries - limit the map size
   if (tabInfoMap.size > 100) {
     const entries = Array.from(tabInfoMap.entries())
     tabInfoMap.clear()
