@@ -1,27 +1,28 @@
-import { useState, useEffect, useMemo } from 'react'
-import {
-  Box,
-  Typography,
-  List,
-  IconButton,
-  Tooltip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  CircularProgress,
-  Pagination,
-} from '@mui/material'
-import SettingsIcon from '@mui/icons-material/Settings'
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep'
-import { ClosedTab } from '../types'
-import { getClosedTabs, removeClosedTab, clearClosedTabs } from '../utils/storage'
-import { searchTabs } from '../utils/helpers'
+import SettingsIcon from '@mui/icons-material/Settings'
+import {
+    Box,
+    Button,
+    CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    IconButton,
+    List,
+    Pagination,
+    Tooltip,
+    Typography,
+} from '@mui/material'
+import { useEffect, useMemo, useState } from 'react'
 import { SearchBar } from '../components/SearchBar'
 import { TabListItem } from '../components/TabListItem'
+import { ClosedTab } from '../types'
+import { searchTabs } from '../utils/helpers'
+import { clearClosedTabs, getClosedTabs, removeClosedTab } from '../utils/storage'
 
-const ITEMS_PER_PAGE = 10
+const ITEMS_PER_PAGE = 8
+const TAB_LIST_HEIGHT = 8 * 60 // 8 items
 
 export function App() {
   const [tabs, setTabs] = useState<ClosedTab[]>([])
@@ -80,7 +81,7 @@ export function App() {
   }
 
   return (
-    <Box sx={{ width: 380, maxHeight: 500, display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ width: 400, display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <Box sx={{ p: 1.5, pb: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
@@ -102,7 +103,7 @@ export function App() {
       </Box>
 
       {/* Tab List */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
+      <Box sx={{ height: TAB_LIST_HEIGHT, overflow: 'hidden' }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
             <CircularProgress size={24} />
