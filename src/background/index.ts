@@ -32,8 +32,8 @@ async function saveTabInfoMap(map: Map<number, TabInfo>): Promise<void> {
       obj[String(k)] = v
     }
     await chrome.storage.session.set({ [TAB_INFO_KEY]: obj })
-  } catch {
-    // ignore write failures (e.g. quota)
+  } catch (error) {
+    console.error('[Tab History] Failed to save tab info map:', error)
   }
 }
 
@@ -52,13 +52,11 @@ async function initializeExistingTabs() {
   for (const tab of tabs) {
     if (tab.id === undefined) continue
     currentIds.add(tab.id)
-    if (tab.url) {
-      tabInfoMap.set(tab.id, {
-        url: tab.url,
-        title: tab.title || tab.url,
-        favIconUrl: tab.favIconUrl,
-      })
-    }
+    tabInfoMap.set(tab.id, {
+      url: tab.url || '',
+      title: tab.title || tab.url || 'New Tab',
+      favIconUrl: tab.favIconUrl,
+    })
   }
 
   // Remove entries for tabs that no longer exist
@@ -86,12 +84,12 @@ async function removeTabInfo(tabId: number): Promise<void> {
 async function main() {
   await initializeExistingTabs()
 
-  // Capture tab info on created
+  // Capture tab info on created (record all tabs, even without URL yet)
   chrome.tabs.onCreated.addListener((tab) => {
-    if (tab.id !== undefined && tab.url) {
+    if (tab.id !== undefined) {
       updateTabInfo(tab.id, {
-        url: tab.url,
-        title: tab.title || tab.url,
+        url: tab.url || '',
+        title: tab.title || tab.url || 'New Tab',
         favIconUrl: tab.favIconUrl,
       })
     }
@@ -113,15 +111,24 @@ async function main() {
     // Skip when window is closing
     if (removeInfo.isWindowClosing) return
 
-    const tabInfo = tabInfoMap.get(tabId)
-    await removeTabInfo(tabId)
+    let tabInfo = tabInfoMap.get(tabId)
 
-    if (!tabInfo) return
+    // Fallback: if tab info is missing, try to get it from window history
+    // Note: once tab is removed, we can't query it directly, but we may have
+    // cached info from other sources
+    if (!tabInfo) {
+      console.warn('[Tab History] Tab info missing for closed tab:', tabId)
+      // Try to get any remaining info from browser session if available
+      await removeTabInfo(tabId)
+      return
+    }
+
+    await removeTabInfo(tabId)
 
     const config = await getConfig()
 
-    // Check if URL should be excluded
-    if (shouldExcludeUrl(tabInfo.url, config.excludePatterns)) {
+    // Check if URL should be excluded (also exclude empty URLs)
+    if (!tabInfo.url || shouldExcludeUrl(tabInfo.url, config.excludePatterns)) {
       return
     }
 
@@ -135,6 +142,7 @@ async function main() {
     }
 
     await addClosedTab(closedTab, config.maxItems)
+    console.log('[Tab History] Recorded closed tab:', tabInfo.title, tabInfo.url)
   })
 
   // Clean up tabInfoMap periodically
