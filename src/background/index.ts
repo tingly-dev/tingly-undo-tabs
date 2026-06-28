@@ -4,6 +4,10 @@ import { ClosedTab } from '../types'
 
 type TabInfo = { url: string; title: string; favIconUrl?: string }
 
+type RecentlyClosedSession = chrome.sessions.Session & {
+  tab?: chrome.tabs.Tab
+}
+
 const TAB_INFO_KEY = 'tabInfoMap'
 
 // --- Session-scoped persistence helpers ---
@@ -41,6 +45,38 @@ async function saveTabInfoMap(map: Map<number, TabInfo>): Promise<void> {
 
 let tabInfoMap: Map<number, TabInfo>
 
+function toTabInfo(tab: chrome.tabs.Tab): TabInfo {
+  const url = tab.url || ''
+  return {
+    url,
+    title: tab.title || url || 'New Tab',
+    favIconUrl: tab.favIconUrl,
+  }
+}
+
+function hasMeaningfulTabInfo(tab: chrome.tabs.Tab): boolean {
+  return Boolean(tab.url || tab.title || tab.favIconUrl)
+}
+
+async function getRecentlyClosedTabInfo(windowId: number): Promise<TabInfo | null> {
+  try {
+    const sessions = await chrome.sessions.getRecentlyClosed({ maxResults: 5 }) as RecentlyClosedSession[]
+
+    for (const session of sessions) {
+      const tab = session.tab
+      if (!tab || tab.windowId !== windowId || !hasMeaningfulTabInfo(tab)) {
+        continue
+      }
+
+      return toTabInfo(tab)
+    }
+  } catch (error) {
+    console.warn('[Tab History] Failed to read recently closed sessions:', error)
+  }
+
+  return null
+}
+
 // Initialize: load from session storage first, then sync with actual tabs
 async function initializeExistingTabs() {
   tabInfoMap = await loadTabInfoMap()
@@ -52,11 +88,7 @@ async function initializeExistingTabs() {
   for (const tab of tabs) {
     if (tab.id === undefined) continue
     currentIds.add(tab.id)
-    tabInfoMap.set(tab.id, {
-      url: tab.url || '',
-      title: tab.title || tab.url || 'New Tab',
-      favIconUrl: tab.favIconUrl,
-    })
+    tabInfoMap.set(tab.id, toTabInfo(tab))
   }
 
   // Remove entries for tabs that no longer exist
@@ -87,22 +119,14 @@ async function main() {
   // Capture tab info on created (record all tabs, even without URL yet)
   chrome.tabs.onCreated.addListener((tab) => {
     if (tab.id !== undefined) {
-      updateTabInfo(tab.id, {
-        url: tab.url || '',
-        title: tab.title || tab.url || 'New Tab',
-        favIconUrl: tab.favIconUrl,
-      })
+      updateTabInfo(tab.id, toTabInfo(tab))
     }
   })
 
   // Capture tab info on updated (for pages that load after creation)
   chrome.tabs.onUpdated.addListener((tabId, _changeInfo, tab) => {
-    if (tab.url) {
-      updateTabInfo(tabId, {
-        url: tab.url,
-        title: tab.title || tab.url,
-        favIconUrl: tab.favIconUrl,
-      })
+    if (hasMeaningfulTabInfo(tab)) {
+      updateTabInfo(tabId, toTabInfo(tab))
     }
   })
 
@@ -111,16 +135,15 @@ async function main() {
     // Skip when window is closing
     if (removeInfo.isWindowClosing) return
 
-    let tabInfo = tabInfoMap.get(tabId)
+    let tabInfo: TabInfo | null = tabInfoMap.get(tabId) ?? null
 
-    // Fallback: if tab info is missing, try to get it from window history
-    // Note: once tab is removed, we can't query it directly, but we may have
-    // cached info from other sources
     if (!tabInfo) {
-      console.warn('[Tab History] Tab info missing for closed tab:', tabId)
-      // Try to get any remaining info from browser session if available
-      await removeTabInfo(tabId)
-      return
+      tabInfo = await getRecentlyClosedTabInfo(removeInfo.windowId)
+      if (!tabInfo) {
+        console.warn('[Tab History] Tab info missing for closed tab:', tabId)
+        await removeTabInfo(tabId)
+        return
+      }
     }
 
     await removeTabInfo(tabId)

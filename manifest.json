@@ -5,7 +5,8 @@
   "description": "Record and reopen closed tabs in order",
   "permissions": [
     "tabs",
-    "storage"
+    "storage",
+    "sessions"
   ],
   "background": {
     "service_worker": "src/background/index.ts",
