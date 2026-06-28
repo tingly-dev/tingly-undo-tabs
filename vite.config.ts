@@ -8,4 +8,9 @@ export default defineConfig({
     react(),
     crx({ manifest }),
   ],
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['src/**/*.test.ts'],
+  },
 })

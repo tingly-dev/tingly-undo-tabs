@@ -36,6 +36,7 @@ A Chrome extension to record and reopen closed tabs.
 
 ```bash
 pnpm dev      # Start development server
+pnpm test     # Run unit tests
 pnpm build    # Build for production
 ```
 
